@@ -1,4 +1,4 @@
-#![cfg_attr(test, deny(warnings))]
+//#![cfg_attr(test, deny(warnings))]
 // While we're getting used to 2018:
 #![warn(rust_2018_idioms)]
 // Clippy isn't enforced by CI (@alexcrichton isn't a fan).

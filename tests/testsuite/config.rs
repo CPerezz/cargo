@@ -1483,3 +1483,28 @@ Caused by:
   unknown variant `invalid`, expected one of `debuginfo`, `none`, `symbols`",
     );
 }
+
+#[cargo_test]
+fn warns_missnamed_config_files() {
+    let p = project()
+        .file(
+            "Cargo.toml",
+            r#"
+                [workspace]
+                members = ["foo"]
+            "#,
+        )
+        .file("foo/src/lib.rs", "")
+        .file(
+            "foo/Cargo.toml",
+            r#"
+                [project]
+                name = "foo"
+                version = "0.1.0"
+            "#,
+        )
+        .file("foo/.cargo/.config", "")
+        .build();
+
+    p.cargo("build").run();
+}

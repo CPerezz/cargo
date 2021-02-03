@@ -1013,8 +1013,45 @@ impl Config {
             Ok(Some(possible))
         } else if possible_with_extension.exists() {
             Ok(Some(possible_with_extension))
+        } else if warn == false {
+            // We don't want to look for missnamed files if the `warn` is set to false.
+            Ok(None)
+        } else if let Ok(filenames) =
+            self.search_missnamed_file_paths(&dir, &filename_without_extension)
+        {
+            self.shell().warn(format!(
+                "detected probably missnamed files`{}`
+            "
+            ))?;
+            Ok(None)
         } else {
             Ok(None)
+        }
+    }
+
+    /// The purpose of this function is to detect any of the filenames provided missnamed in the
+    /// sent directory.
+    /// This helps in order to give better errors or warnings when filenames like `.config.toml`
+    /// exist but are obviously not being used by Cargo.
+    fn search_missnamed_file_paths<P: AsRef<Path>>(
+        &self,
+        dir: P,
+        filename_without_extension: &str,
+    ) -> io::Result<Vec<String>> {
+        let mut filenames = Vec::new();
+        for entry in dir.as_ref().read_dir()? {
+            let filename = entry?.path().display().to_string();
+            if filename.contains(filename_without_extension) {
+                filenames.push(filename.to_string());
+            }
+        }
+        if !filenames.is_empty() {
+            Ok(filenames)
+        } else {
+            Err(io::Error::new(
+                io::ErrorKind::NotFound,
+                "no missnamed files found",
+            ))
         }
     }
 
